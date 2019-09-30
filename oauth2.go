@@ -13,8 +13,8 @@ type OAuth2API struct {
 }
 
 type TokenInput struct {
-	ClientID     string // client_id
-	ClientSecret string // client_secret
+	ClientID     *string // client_id
+	ClientSecret *string // client_secret
 }
 
 type TokenOutput struct {
@@ -27,8 +27,13 @@ type TokenOutput struct {
 func (x *OAuth2API) Token(input *TokenInput) (*TokenOutput, error) {
 	qs := url.Values{}
 	buf := bytes.Buffer{}
-	qs.Add("client_id", input.ClientID)
-	qs.Add("client_secret", input.ClientSecret)
+	if input.ClientID != nil {
+		qs.Add("client_id", *input.ClientID)
+	}
+	if input.ClientSecret != nil {
+		qs.Add("client_secret", *input.ClientSecret)
+	}
+
 	buf.Write([]byte(qs.Encode()))
 
 	req := request{
@@ -47,33 +52,28 @@ func (x *OAuth2API) Token(input *TokenInput) (*TokenOutput, error) {
 }
 
 type RevokeInput struct {
-	Token string // token
+	Token *string // token
 }
 
-type RevokeOutput struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-}
+type RevokeOutput struct{}
 
-// Token generates an OAuth2 access token
-func (x *OAuth2API) Revoke(input *TokenInput) (*TokenOutput, error) {
+// Revoke disable oauth2 token
+func (x *OAuth2API) Revoke(input *RevokeInput) (*RevokeOutput, error) {
 	qs := url.Values{}
 	buf := bytes.Buffer{}
-	qs.Add("client_id", input.ClientID)
-	qs.Add("client_secret", input.ClientSecret)
+	qs.Add("token", *input.Token)
 	buf.Write([]byte(qs.Encode()))
 
 	req := request{
 		Method:  "POST",
-		Path:    "oauth2/token",
+		Path:    "oauth2/revoke",
 		Body:    bytes.NewReader(buf.Bytes()),
 		Headers: []httpHeader{{"Content-Type", "application/x-www-form-urlencoded"}},
 	}
 
-	var output TokenOutput
+	var output RevokeOutput
 	if err := x.client.sendRequest(req, &output); err != nil {
-		return nil, errors.Wrap(err, "Fail to OAuth2 Token")
+		return nil, errors.Wrap(err, "Fail to revoke OAuth2 Token")
 	}
 
 	return &output, nil

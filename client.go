@@ -38,8 +38,8 @@ func NewClient() *Client {
 // EnableOAuth2 retrieves OAuth2 token and set it to the client
 func (x *Client) EnableOAuth2(clientID, secret string) error {
 	resp, err := x.OAuth2.Token(&TokenInput{
-		ClientID:     clientID,
-		ClientSecret: secret,
+		ClientID:     &clientID,
+		ClientSecret: &secret,
 	})
 	if err != nil {
 		return errors.Wrap(err, "Fail to OAuth2 authentication")
