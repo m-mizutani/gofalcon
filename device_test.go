@@ -10,8 +10,7 @@ import (
 )
 
 func TestQueryDevices(t *testing.T) {
-	client := gofalcon.NewClient(cfg.user, cfg.token)
-	output, err := client.Device.QueryDevices(&gofalcon.QueryDevicesInput{})
+	output, err := commonClient.Device.QueryDevices(&gofalcon.QueryDevicesInput{})
 	require.NoError(t, err)
 	assert.Equal(t, 0, len(output.Errors))
 	assert.NotEqual(t, 0, len(output.Resources))
@@ -22,9 +21,7 @@ func TestQueryDevices(t *testing.T) {
 }
 
 func TestEntityDevices(t *testing.T) {
-	client := gofalcon.NewClient(cfg.user, cfg.token)
-
-	output, err := client.Device.QueryDevices(&gofalcon.QueryDevicesInput{
+	output, err := commonClient.Device.QueryDevices(&gofalcon.QueryDevicesInput{
 		Limit: gofalcon.Int(1),
 	})
 	require.NoError(t, err)
@@ -32,7 +29,7 @@ func TestEntityDevices(t *testing.T) {
 	assert.NotEqual(t, 0, len(output.Resources))
 
 	aid := output.Resources[0]
-	detail, err := client.Device.EntityDevices(&gofalcon.EntityDevicesInput{
+	detail, err := commonClient.Device.EntityDevices(&gofalcon.EntityDevicesInput{
 		ID: []string{aid},
 	})
 	require.NoError(t, err)
