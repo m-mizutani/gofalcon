@@ -89,7 +89,7 @@ type DeviceMetaData struct {
 // Search
 //
 
-type Device struct {
+type DeviceAPI struct {
 	client *Client
 }
 
@@ -115,7 +115,7 @@ type QueryDevicesOutput struct {
 }
 
 // QueryDevices searches hosts in your environment by platform, hostname, IP, and other criteria.
-func (x *Device) QueryDevices(input *QueryDevicesInput) (*QueryDevicesOutput, error) {
+func (x *DeviceAPI) QueryDevices(input *QueryDevicesInput) (*QueryDevicesOutput, error) {
 	qs := url.Values{}
 	if input.Offset != nil {
 		qs.Add("offset", fmt.Sprintf("%d", *input.Offset))
@@ -158,7 +158,7 @@ type EntityDevicesOutput struct {
 }
 
 // EntityDevices gets details on one or more hosts by providing agent IDs (AID)
-func (x *Device) EntityDevices(input *EntityDevicesInput) (*EntityDevicesOutput, error) {
+func (x *DeviceAPI) EntityDevices(input *EntityDevicesInput) (*EntityDevicesOutput, error) {
 	qs := url.Values{}
 	for _, id := range input.ID {
 		qs.Add("ids", id)
