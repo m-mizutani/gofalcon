@@ -32,8 +32,12 @@ type DeviceResource struct {
 	DeviceID                      string         `json:"device_id"`
 	DevicePolicies                DevicePolicy   `json:"device_policies"`
 	ExternalIP                    string         `json:"external_ip"`
+	FirstLoginTimestamp           string         `json:"first_login_timestamp"`
+	FirstLoginUser                string         `json:"first_login_user"`
 	FirstSeen                     string         `json:"first_seen"`
 	Hostname                      string         `json:"hostname"`
+	LastLoginTimestamp            string         `json:"last_login_timestamp"`
+	LastLoginUser                 string         `json:"last_login_user"`
 	LastSeen                      string         `json:"last_seen"`
 	LocalIP                       string         `json:"local_ip"`
 	MacAddress                    string         `json:"mac_address"`
@@ -42,6 +46,7 @@ type DeviceResource struct {
 	MinorVersion                  string         `json:"minor_version"`
 	ModifiedTimestamp             string         `json:"modified_timestamp"`
 	OsVersion                     string         `json:"os_version"`
+	Ou                            []string       `json:"ou"`
 	PlatformID                    string         `json:"platform_id"`
 	PlatformName                  string         `json:"platform_name"`
 	Policies                      []Policy       `json:"policies"`
@@ -51,6 +56,7 @@ type DeviceResource struct {
 	Status                        string         `json:"status"`
 	SystemManufacturer            string         `json:"system_manufacturer"`
 	SystemProductName             string         `json:"system_product_name"`
+	Tags                          []string       `json:"tags"`
 }
 
 type Policy struct {

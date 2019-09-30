@@ -20,8 +20,9 @@ type Client struct {
 	OAuth2Token string
 	OAuth2Type  string
 
-	Device *DeviceAPI
-	OAuth2 *OAuth2API
+	Device    *DeviceAPI
+	OAuth2    *OAuth2API
+	Detection *DetectionAPI
 }
 
 // NewClient is constructor of Client
@@ -31,6 +32,7 @@ func NewClient() *Client {
 	}
 	client.Device = &DeviceAPI{client: &client}
 	client.OAuth2 = &OAuth2API{client: &client}
+	client.Detection = &DetectionAPI{client: &client}
 
 	return &client
 }
@@ -94,6 +96,7 @@ func (x *Client) sendRequest(req request, v interface{}) error {
 		r.SetBasicAuth(x.User, x.Token)
 	}
 
+	r.Header.Add("accept", "application/json")
 	for _, hdr := range req.Headers {
 		r.Header.Add(hdr.Name, hdr.Value)
 	}
@@ -111,7 +114,7 @@ func (x *Client) sendRequest(req request, v interface{}) error {
 
 	var base BaseResponse
 	if err := json.Unmarshal(rawData, &base); err != nil {
-		return errors.Wrap(err, "Fail to parse base reponse of Falcon")
+		return errors.Wrapf(err, "Fail to parse base reponse of Falcon: %v", string(rawData))
 	}
 	if len(base.Errors) > 0 {
 		var messages []string
@@ -122,7 +125,7 @@ func (x *Client) sendRequest(req request, v interface{}) error {
 	}
 
 	if err := json.Unmarshal(rawData, v); err != nil {
-		return errors.Wrap(err, "Fail to parse reponse of Falcon")
+		return errors.Wrapf(err, "Fail to parse reponse of Falcon: %v", string(rawData))
 	}
 
 	return nil
