@@ -20,7 +20,7 @@ type Client struct {
 	OAuth2Token string
 	OAuth2Type  string
 
-	Device *Device
+	Device *DeviceAPI
 	OAuth2 *OAuth2API
 }
 
@@ -29,7 +29,7 @@ func NewClient() *Client {
 	client := Client{
 		Endpoint: "https://api.crowdstrike.com",
 	}
-	client.Device = &Device{client: &client}
+	client.Device = &DeviceAPI{client: &client}
 	client.OAuth2 = &OAuth2API{client: &client}
 
 	return &client
