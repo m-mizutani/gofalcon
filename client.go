@@ -23,6 +23,7 @@ type Client struct {
 	Device    *DeviceAPI
 	OAuth2    *OAuth2API
 	Detection *DetectionAPI
+	Sensor    *SensorAPI
 }
 
 // NewClient is constructor of Client
@@ -33,6 +34,7 @@ func NewClient() *Client {
 	client.Device = &DeviceAPI{client: &client}
 	client.OAuth2 = &OAuth2API{client: &client}
 	client.Detection = &DetectionAPI{client: &client}
+	client.Sensor = &SensorAPI{client: &client}
 
 	return &client
 }
@@ -131,5 +133,8 @@ func (x *Client) sendRequest(req request, v interface{}) error {
 	return nil
 }
 
-func Int(v int) *int          { return &v }
+// Int converts int to pointer
+func Int(v int) *int { return &v }
+
+// String converts string to pointer
 func String(v string) *string { return &v }
