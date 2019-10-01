@@ -19,6 +19,8 @@ type Client struct {
 	Endpoint    string
 	OAuth2Token string
 	OAuth2Type  string
+	ClientID    string
+	Secret      string
 
 	Device    *DeviceAPI
 	OAuth2    *OAuth2API
@@ -41,9 +43,16 @@ func NewClient() *Client {
 
 // EnableOAuth2 retrieves OAuth2 token and set it to the client
 func (x *Client) EnableOAuth2(clientID, secret string) error {
+	x.ClientID = clientID
+	x.Secret = secret
+
+	return x.refreshOAuth2Token()
+}
+
+func (x *Client) refreshOAuth2Token() error {
 	resp, err := x.OAuth2.Token(&TokenInput{
-		ClientID:     &clientID,
-		ClientSecret: &secret,
+		ClientID:     &x.ClientID,
+		ClientSecret: &x.Secret,
 	})
 	if err != nil {
 		return errors.Wrap(err, "Fail to OAuth2 authentication")
@@ -79,6 +88,31 @@ type request struct {
 }
 
 func (x *Client) sendRequest(req request, v interface{}) error {
+	if err := x.sendHTTPRequest(req, v); err != nil {
+		if _, ok := err.(*authError); !ok {
+			return err // General error
+		}
+
+		if err := x.refreshOAuth2Token(); err != nil {
+			return err // Can not refresh token
+		}
+
+		// Retry
+		return x.sendHTTPRequest(req, v)
+	}
+
+	return nil
+}
+
+type authError struct {
+	err error
+}
+
+func (x *authError) Error() string {
+	return x.err.Error()
+}
+
+func (x *Client) sendHTTPRequest(req request, v interface{}) error {
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/%s", x.Endpoint, req.Path)
 	if len(req.QueryString) > 0 {
@@ -112,6 +146,13 @@ func (x *Client) sendRequest(req request, v interface{}) error {
 	rawData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrap(err, "Fail to read response from server")
+	}
+
+	// Error handling
+	if resp.StatusCode == 403 {
+		return &authError{err: fmt.Errorf("Authentication Error (HTTP 403): %s", string(rawData))}
+	} else if resp.StatusCode >= 400 {
+		return fmt.Errorf("Fail HTTP request %d: %s", resp.StatusCode, string(rawData))
 	}
 
 	var base BaseResponse
