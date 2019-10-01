@@ -227,22 +227,24 @@ func (x *SensorAPI) EventStream() chan *StreamQueue {
 				readCh := readEventStreamFeed(f)
 				ticker := time.NewTicker(time.Minute * 25)
 
-				select {
-				case q := <-readCh:
-					ch <- q
-					if q.Error != nil {
-						return
-					}
+				for {
+					select {
+					case q := <-readCh:
+						ch <- q
+						if q.Error != nil {
+							return
+						}
 
-				case <-ticker.C:
-					_, err = x.EntitiesDatafeedAction(&EntitiesDatafeedActionInput{
-						AppID:      &appID,
-						ActionName: String("refresh_active_stream_session"),
-						Partition:  &partition,
-					})
-					if err != nil {
-						ch <- &StreamQueue{Error: errors.Wrap(err, "fail to unmarshal event stream")}
-						return
+					case <-ticker.C:
+						_, err = x.EntitiesDatafeedAction(&EntitiesDatafeedActionInput{
+							AppID:      &appID,
+							ActionName: String("refresh_active_stream_session"),
+							Partition:  &partition,
+						})
+						if err != nil {
+							ch <- &StreamQueue{Error: errors.Wrap(err, "fail to unmarshal event stream")}
+							return
+						}
 					}
 				}
 			}(feed)
