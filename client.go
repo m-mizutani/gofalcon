@@ -19,10 +19,13 @@ type Client struct {
 	Endpoint    string
 	OAuth2Token string
 	OAuth2Type  string
+	ClientID    string
+	Secret      string
 
 	Device    *DeviceAPI
 	OAuth2    *OAuth2API
 	Detection *DetectionAPI
+	Sensor    *SensorAPI
 }
 
 // NewClient is constructor of Client
@@ -33,15 +36,23 @@ func NewClient() *Client {
 	client.Device = &DeviceAPI{client: &client}
 	client.OAuth2 = &OAuth2API{client: &client}
 	client.Detection = &DetectionAPI{client: &client}
+	client.Sensor = &SensorAPI{client: &client}
 
 	return &client
 }
 
 // EnableOAuth2 retrieves OAuth2 token and set it to the client
 func (x *Client) EnableOAuth2(clientID, secret string) error {
+	x.ClientID = clientID
+	x.Secret = secret
+
+	return x.refreshOAuth2Token()
+}
+
+func (x *Client) refreshOAuth2Token() error {
 	resp, err := x.OAuth2.Token(&TokenInput{
-		ClientID:     &clientID,
-		ClientSecret: &secret,
+		ClientID:     &x.ClientID,
+		ClientSecret: &x.Secret,
 	})
 	if err != nil {
 		return errors.Wrap(err, "Fail to OAuth2 authentication")
@@ -77,6 +88,31 @@ type request struct {
 }
 
 func (x *Client) sendRequest(req request, v interface{}) error {
+	if err := x.sendHTTPRequest(req, v); err != nil {
+		if _, ok := err.(*authError); !ok {
+			return err // General error
+		}
+
+		if err := x.refreshOAuth2Token(); err != nil {
+			return err // Can not refresh token
+		}
+
+		// Retry
+		return x.sendHTTPRequest(req, v)
+	}
+
+	return nil
+}
+
+type authError struct {
+	err error
+}
+
+func (x *authError) Error() string {
+	return x.err.Error()
+}
+
+func (x *Client) sendHTTPRequest(req request, v interface{}) error {
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/%s", x.Endpoint, req.Path)
 	if len(req.QueryString) > 0 {
@@ -112,6 +148,13 @@ func (x *Client) sendRequest(req request, v interface{}) error {
 		return errors.Wrap(err, "Fail to read response from server")
 	}
 
+	// Error handling
+	if resp.StatusCode == 403 {
+		return &authError{err: fmt.Errorf("Authentication Error (HTTP 403): %s", string(rawData))}
+	} else if resp.StatusCode >= 400 {
+		return fmt.Errorf("Fail HTTP request %d: %s", resp.StatusCode, string(rawData))
+	}
+
 	var base BaseResponse
 	if err := json.Unmarshal(rawData, &base); err != nil {
 		return errors.Wrapf(err, "Fail to parse base reponse of Falcon: %v", string(rawData))
@@ -131,5 +174,8 @@ func (x *Client) sendRequest(req request, v interface{}) error {
 	return nil
 }
 
-func Int(v int) *int          { return &v }
+// Int converts int to pointer
+func Int(v int) *int { return &v }
+
+// String converts string to pointer
 func String(v string) *string { return &v }

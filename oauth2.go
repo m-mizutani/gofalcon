@@ -12,11 +12,13 @@ type OAuth2API struct {
 	client *Client
 }
 
+// TokenInput is arguments of Token
 type TokenInput struct {
 	ClientID     *string // client_id
 	ClientSecret *string // client_secret
 }
 
+// TokenOutput is a result of Token
 type TokenOutput struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
@@ -51,10 +53,12 @@ func (x *OAuth2API) Token(input *TokenInput) (*TokenOutput, error) {
 	return &output, nil
 }
 
+// RevokeInput is arguments of OAuth2API.Revoke
 type RevokeInput struct {
 	Token *string // token
 }
 
+// RevokeOutput is a result of OAuth2API.Revoke
 type RevokeOutput struct{}
 
 // Revoke disable oauth2 token
