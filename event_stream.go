@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -217,18 +218,30 @@ func (x *SensorAPI) EventStream() chan *StreamQueue {
 
 	go func() {
 		defer close(ch)
+		wait := 0.0
 		appID := "gofalcon"
-		output, err := x.EntitiesDatafeed(&EntitiesDatafeedInput{
-			AppID: &appID,
-		})
-		if err != nil {
-			ch <- &StreamQueue{Error: err}
-			return
-		}
+		var output *EntitiesDatafeedOutput
+		var err error
 
-		if len(output.Resources) == 0 {
-			ch <- &StreamQueue{Error: fmt.Errorf("No event stream info")}
-			return
+		for {
+			output, err = x.EntitiesDatafeed(&EntitiesDatafeedInput{
+				AppID: &appID,
+			})
+			if err != nil {
+				ch <- &StreamQueue{Error: err}
+				return
+			}
+
+			if len(output.Resources) > 0 {
+				break
+			}
+
+			sec := time.Duration(math.Pow(2, wait))
+			Logger.Warnf("No event stream info. Retry after %d sec...", sec)
+			time.Sleep(time.Second * sec)
+			if wait < 6 {
+				wait++
+			}
 		}
 
 		var wg sync.WaitGroup
