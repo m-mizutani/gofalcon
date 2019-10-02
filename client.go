@@ -10,7 +10,15 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
+
+// Logger is exported to be controllable from external.
+var Logger = logrus.New()
+
+func init() {
+	Logger.SetLevel(logrus.FatalLevel)
+}
 
 // Client is Falcon API client
 type Client struct {
@@ -177,5 +185,21 @@ func (x *Client) sendHTTPRequest(req request, v interface{}) error {
 // Int converts int to pointer
 func Int(v int) *int { return &v }
 
+// IntValue returns int from *int and returns 0 if nil
+func IntValue(v *int) int {
+	if v == nil {
+		return 0
+	}
+	return *v
+}
+
 // String converts string to pointer
 func String(v string) *string { return &v }
+
+// StringValue returns string from *string and returns "" if nil
+func StringValue(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
+}

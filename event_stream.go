@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // SensorAPI is for /sensor/ prefix APIs
@@ -74,6 +75,12 @@ func (x *SensorAPI) EntitiesDatafeed(input *EntitiesDatafeedInput) (*EntitiesDat
 		return nil, errors.Wrap(err, "Fail to query detections")
 	}
 
+	Logger.WithFields(logrus.Fields{
+		"appId":  StringValue(input.AppID),
+		"format": StringValue(input.Format),
+		"meta":   output.Meta,
+	}).Debug("Done SensorAPI.EntitiesDatafeed")
+
 	return &output, nil
 }
 
@@ -116,6 +123,13 @@ func (x *SensorAPI) EntitiesDatafeedAction(input *EntitiesDatafeedActionInput) (
 	if err := x.client.sendRequest(req, &output); err != nil {
 		return nil, errors.Wrapf(err, "Fail to %s DataFeed", *input.ActionName)
 	}
+
+	Logger.WithFields(logrus.Fields{
+		"appId":       StringValue(input.AppID),
+		"action_name": StringValue(input.ActionName),
+		"partition":   IntValue(input.Partition),
+		"meta":        output.Meta,
+	}).Debug("Done SensorAPI.EntitiesDatafeedAction")
 
 	return &output, nil
 }
@@ -170,6 +184,11 @@ func readEventStreamFeed(feed DataFeedResource) chan *StreamQueue {
 			return
 		}
 
+		Logger.WithFields(logrus.Fields{
+			"url":  feed.DataFeedURL,
+			"code": resp.StatusCode,
+		}).Info("Opened DataFeedURL")
+
 		defer resp.Body.Close()
 		decoder := json.NewDecoder(resp.Body)
 
@@ -218,6 +237,11 @@ func (x *SensorAPI) EventStream() chan *StreamQueue {
 
 			go func(f DataFeedResource) {
 				defer wg.Done()
+				defer Logger.WithFields(logrus.Fields{
+					"appId": appID,
+					"url":   f.DataFeedURL,
+				}).Info("Exit DataFeedURL")
+
 				partition, err := f.Partition()
 				if err != nil {
 					ch <- &StreamQueue{Error: err}
@@ -245,6 +269,12 @@ func (x *SensorAPI) EventStream() chan *StreamQueue {
 							ch <- &StreamQueue{Error: errors.Wrap(err, "fail to unmarshal event stream")}
 							return
 						}
+
+						Logger.WithFields(logrus.Fields{
+							"appId":     appID,
+							"partition": partition,
+							"url":       f.DataFeedURL,
+						}).Info("Refresh DataFeedURL")
 					}
 				}
 			}(feed)

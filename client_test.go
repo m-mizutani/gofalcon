@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/m-mizutani/gofalcon"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,6 +36,8 @@ func init() {
 	if err != nil {
 		log.Fatal("Fail oauth2", err)
 	}
+
+	gofalcon.Logger.SetLevel(logrus.DebugLevel)
 }
 
 func TestClientOAuth2(t *testing.T) {

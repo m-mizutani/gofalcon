@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // OAuth2API provides oauth2 get token and revoke token operation.
@@ -50,6 +51,10 @@ func (x *OAuth2API) Token(input *TokenInput) (*TokenOutput, error) {
 		return nil, errors.Wrap(err, "Fail to OAuth2 Token")
 	}
 
+	Logger.WithFields(logrus.Fields{
+		"client_id": *input.ClientID,
+	}).Debug("Authorized OAuth2")
+
 	return &output, nil
 }
 
@@ -79,6 +84,8 @@ func (x *OAuth2API) Revoke(input *RevokeInput) (*RevokeOutput, error) {
 	if err := x.client.sendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to revoke OAuth2 Token")
 	}
+
+	Logger.Debug("Revoked OAuth2 Token")
 
 	return &output, nil
 }

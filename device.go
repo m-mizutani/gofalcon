@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type BaseResponse struct {
@@ -149,7 +150,12 @@ func (x *DeviceAPI) QueryDevices(input *QueryDevicesInput) (*QueryDevicesOutput,
 	if err := x.client.sendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to QueryDevice")
 	}
-	// logger.WithField("url", url).Info("GET request URL")
+
+	Logger.WithFields(logrus.Fields{
+		"qs":       qs.Encode(),
+		"meta":     output.Meta,
+		"returned": len(output.Resources),
+	}).Debug("Done QueryDevices")
 
 	return &output, nil
 }
@@ -179,7 +185,12 @@ func (x *DeviceAPI) EntityDevices(input *EntityDevicesInput) (*EntityDevicesOutp
 	if err := x.client.sendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to EntityDevices")
 	}
-	// logger.WithField("url", url).Info("GET request URL")
+
+	Logger.WithFields(logrus.Fields{
+		"qs":       qs.Encode(),
+		"meta":     output.Meta,
+		"returned": len(output.Resources),
+	}).Debug("Done EntityDevices")
 
 	return &output, nil
 }

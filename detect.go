@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type DetectionAPI struct {
@@ -56,6 +57,12 @@ func (x *DetectionAPI) QueriesDetects(input *QueriesDetectsInput) (*QueriesDetec
 	if err := x.client.sendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to query detections")
 	}
+
+	Logger.WithFields(logrus.Fields{
+		"qs":       qs.Encode(),
+		"meta":     output.Meta,
+		"returned": len(output.Resources),
+	}).Debug("Done QueriesDetects")
 
 	return &output, nil
 }
@@ -168,6 +175,12 @@ func (x *DetectionAPI) EntitySummaries(input *EntitySummariesInput) (*EntitySumm
 	if err := x.client.sendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to query detections")
 	}
+
+	Logger.WithFields(logrus.Fields{
+		"input":    input,
+		"meta":     output.Meta,
+		"returned": len(output.Resources),
+	}).Debug("Done EntitySummaries")
 
 	return &output, nil
 }
