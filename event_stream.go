@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -212,14 +213,36 @@ func readEventStreamFeed(feed DataFeedResource) chan *StreamQueue {
 	return ch
 }
 
+// EventStreamInput is arguments of EventStream
+type EventStreamInput struct {
+	AppID *string
+
+	// Timeout is waiting seconds to retrieve DataFeedURL. Because another DataFeedURL
+	// can not be retrieved if same AppID process is running,
+	Timeout *int
+}
+
 // EventStream generates channel of event stream
-func (x *SensorAPI) EventStream() chan *StreamQueue {
+func (x *SensorAPI) EventStream(input *EventStreamInput) chan *StreamQueue {
 	ch := make(chan *StreamQueue, StreamEventQueueSize)
+	if input == nil {
+		input = &EventStreamInput{}
+	}
 
 	go func() {
 		defer close(ch)
 		wait := 0.0
-		appID := "gofalcon"
+
+		appID := strings.Replace(uuid.New().String()[:23], "-", "", -1)
+		if input.AppID != nil {
+			appID = *input.AppID
+		}
+		timeout := 120
+		if input.Timeout != nil {
+			timeout = *input.Timeout
+		}
+		startTime := time.Now()
+
 		var output *EntitiesDatafeedOutput
 		var err error
 
@@ -241,6 +264,12 @@ func (x *SensorAPI) EventStream() chan *StreamQueue {
 			time.Sleep(time.Second * sec)
 			if wait < 6 {
 				wait++
+			}
+
+			now := time.Now()
+			if now.Sub(startTime) > time.Second*time.Duration(timeout) {
+				ch <- &StreamQueue{Error: errors.Wrap(err, "Fail to retrieve DataFeedURL, timeout")}
+				return
 			}
 		}
 
@@ -267,6 +296,9 @@ func (x *SensorAPI) EventStream() chan *StreamQueue {
 				for {
 					select {
 					case q := <-readCh:
+						if q == nil {
+							return
+						}
 						ch <- q
 						if q.Error != nil {
 							return

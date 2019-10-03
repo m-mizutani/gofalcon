@@ -44,7 +44,7 @@ func TestSensorAPI(t *testing.T) {
 
 func TestEventStream(t *testing.T) {
 	qCount := 0
-	ch := commonClient.Sensor.EventStream()
+	ch := commonClient.Sensor.EventStream(nil)
 
 	select {
 	case q := <-ch:
@@ -59,4 +59,36 @@ func TestEventStream(t *testing.T) {
 	}
 
 	assert.Equal(t, 1, qCount)
+}
+
+func TestMultipleEventStream(t *testing.T) {
+	qCount1 := 0
+	qCount2 := 0
+	ch1 := commonClient.Sensor.EventStream(nil)
+	ch2 := commonClient.Sensor.EventStream(nil)
+
+Loop:
+	for {
+		select {
+		case q := <-ch1:
+			qCount1++
+			assert.NoError(t, q.Error)
+			if qCount1 > 0 && qCount2 > 0 {
+				break Loop
+			}
+
+		case q := <-ch2:
+			qCount2++
+			assert.NoError(t, q.Error)
+			if qCount1 > 0 && qCount2 > 0 {
+				break Loop
+			}
+
+		case <-time.After(time.Second * 10):
+			break Loop
+		}
+	}
+
+	assert.NotEqual(t, 0, qCount1)
+	assert.NotEqual(t, 0, qCount2)
 }
