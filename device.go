@@ -141,13 +141,13 @@ func (x *DeviceAPI) QueryDevices(input *QueryDevicesInput) (*QueryDevicesOutput,
 		qs.Add("filter", strings.Join(filters, "+"))
 	}
 
-	req := request{
+	req := Request{
 		Path:        "devices/queries/devices/v1",
 		QueryString: qs,
 	}
 
 	var output QueryDevicesOutput
-	if err := x.client.sendRequest(req, &output); err != nil {
+	if err := x.client.SendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to QueryDevice")
 	}
 
@@ -176,13 +176,13 @@ func (x *DeviceAPI) EntityDevices(input *EntityDevicesInput) (*EntityDevicesOutp
 		qs.Add("ids", id)
 	}
 
-	req := request{
+	req := Request{
 		Path:        "devices/entities/devices/v1",
 		QueryString: qs,
 	}
 
 	var output EntityDevicesOutput
-	if err := x.client.sendRequest(req, &output); err != nil {
+	if err := x.client.SendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to EntityDevices")
 	}
 

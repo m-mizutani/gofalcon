@@ -39,7 +39,7 @@ func (x *OAuth2API) Token(input *TokenInput) (*TokenOutput, error) {
 
 	buf.Write([]byte(qs.Encode()))
 
-	req := request{
+	req := Request{
 		Method:  "POST",
 		Path:    "oauth2/token",
 		Body:    bytes.NewReader(buf.Bytes()),
@@ -47,7 +47,7 @@ func (x *OAuth2API) Token(input *TokenInput) (*TokenOutput, error) {
 	}
 
 	var output TokenOutput
-	if err := x.client.sendRequest(req, &output); err != nil {
+	if err := x.client.SendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to OAuth2 Token")
 	}
 
@@ -73,7 +73,7 @@ func (x *OAuth2API) Revoke(input *RevokeInput) (*RevokeOutput, error) {
 	qs.Add("token", *input.Token)
 	buf.Write([]byte(qs.Encode()))
 
-	req := request{
+	req := Request{
 		Method:  "POST",
 		Path:    "oauth2/revoke",
 		Body:    bytes.NewReader(buf.Bytes()),
@@ -81,7 +81,7 @@ func (x *OAuth2API) Revoke(input *RevokeInput) (*RevokeOutput, error) {
 	}
 
 	var output RevokeOutput
-	if err := x.client.sendRequest(req, &output); err != nil {
+	if err := x.client.SendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to revoke OAuth2 Token")
 	}
 

@@ -66,14 +66,14 @@ func (x *SensorAPI) EntitiesDatafeed(input *EntitiesDatafeedInput) (*EntitiesDat
 		qs.Add("format", *input.Format)
 	}
 
-	req := request{
+	req := Request{
 		Method:      "GET",
 		Path:        "sensors/entities/datafeed/v2",
 		QueryString: qs,
 	}
 
 	var output EntitiesDatafeedOutput
-	if err := x.client.sendRequest(req, &output); err != nil {
+	if err := x.client.SendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to query detections")
 	}
 
@@ -114,7 +114,7 @@ func (x *SensorAPI) EntitiesDatafeedAction(input *EntitiesDatafeedActionInput) (
 	qs.Add("appId", *input.AppID)
 	qs.Add("action_name", *input.ActionName)
 
-	req := request{
+	req := Request{
 		Method:      "POST",
 		Path:        fmt.Sprintf("sensors/entities/datafeed-actions/v1/%d", *input.Partition),
 		QueryString: qs,
@@ -122,7 +122,7 @@ func (x *SensorAPI) EntitiesDatafeedAction(input *EntitiesDatafeedActionInput) (
 	}
 
 	var output EntitiesDatafeedActionOutput
-	if err := x.client.sendRequest(req, &output); err != nil {
+	if err := x.client.SendRequest(req, &output); err != nil {
 		return nil, errors.Wrapf(err, "Fail to %s DataFeed", *input.ActionName)
 	}
 

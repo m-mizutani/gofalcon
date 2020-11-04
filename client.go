@@ -87,7 +87,8 @@ type httpHeader struct {
 	Value string
 }
 
-type request struct {
+// Request is data set of API request. Method is HTTP method. Path should be set like "devices/queries/devices/v1". QueryString and Body are optional. Headers can also be modified, but basically no need to modify.
+type Request struct {
 	Method      string
 	Path        string
 	QueryString url.Values
@@ -95,7 +96,8 @@ type request struct {
 	Headers     []httpHeader
 }
 
-func (x *Client) sendRequest(req request, v interface{}) error {
+// SendRequest sends any request to API endpoint and set results to v. This function retry the request if OAuth2 token is expired.
+func (x *Client) SendRequest(req Request, v interface{}) error {
 	if err := x.sendHTTPRequest(req, v); err != nil {
 		if _, ok := err.(*authError); !ok {
 			return err // General error
@@ -120,7 +122,7 @@ func (x *authError) Error() string {
 	return x.err.Error()
 }
 
-func (x *Client) sendHTTPRequest(req request, v interface{}) error {
+func (x *Client) sendHTTPRequest(req Request, v interface{}) error {
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/%s", x.Endpoint, req.Path)
 	if len(req.QueryString) > 0 {
@@ -140,9 +142,14 @@ func (x *Client) sendHTTPRequest(req request, v interface{}) error {
 		r.SetBasicAuth(x.User, x.Token)
 	}
 
+	if req.Body != nil {
+		// Set default content type
+		r.Header.Add("content-type", "application/json")
+	}
+
 	r.Header.Add("accept", "application/json")
 	for _, hdr := range req.Headers {
-		r.Header.Add(hdr.Name, hdr.Value)
+		r.Header.Set(hdr.Name, hdr.Value)
 	}
 
 	resp, err := client.Do(r)

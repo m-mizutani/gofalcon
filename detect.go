@@ -47,14 +47,14 @@ func (x *DetectionAPI) QueriesDetects(input *QueriesDetectsInput) (*QueriesDetec
 		qs.Add("q", *input.Q)
 	}
 
-	req := request{
+	req := Request{
 		Method:      "GET",
 		Path:        "detects/queries/detects/v1",
 		QueryString: qs,
 	}
 
 	var output QueriesDetectsOutput
-	if err := x.client.sendRequest(req, &output); err != nil {
+	if err := x.client.SendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to query detections")
 	}
 
@@ -164,7 +164,7 @@ func (x *DetectionAPI) EntitySummaries(input *EntitySummariesInput) (*EntitySumm
 		return nil, errors.Wrap(err, "Fail to marshal EntitySummaries input")
 	}
 
-	req := request{
+	req := Request{
 		Method:  "POST",
 		Path:    "detects/entities/summaries/GET/v1",
 		Body:    bytes.NewReader(raw),
@@ -172,7 +172,7 @@ func (x *DetectionAPI) EntitySummaries(input *EntitySummariesInput) (*EntitySumm
 	}
 
 	var output EntitySummariesOutput
-	if err := x.client.sendRequest(req, &output); err != nil {
+	if err := x.client.SendRequest(req, &output); err != nil {
 		return nil, errors.Wrap(err, "Fail to query detections")
 	}
 
