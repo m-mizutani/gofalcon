@@ -96,6 +96,36 @@ type Request struct {
 	Headers     []httpHeader
 }
 
+// Response is generic falcon API response
+type Response struct {
+	BaseResponse
+	Resources []interface{} `json:"resources"`
+}
+
+type BaseResponse struct {
+	Errors []ServerError `json:"errors"`
+	Meta   MetaData      `json:"meta"`
+}
+
+type Pagenation struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+	Total  int `json:"total"`
+}
+
+type MetaData struct {
+	PoweredBy  string      `json:"powered_by"`
+	QueryTime  float64     `json:"query_time"`
+	TraceID    string      `json:"trace_id"`
+	Pagenation *Pagenation `json:"pagination"`
+}
+
+type ServerError struct {
+	Code    int    `json:"code"`
+	ID      string `json:"id"`
+	Message string `json:"message"`
+}
+
 // SendRequest sends any request to API endpoint and set results to v. This function retry the request if OAuth2 token is expired.
 func (x *Client) SendRequest(req Request, v interface{}) error {
 	if err := x.sendHTTPRequest(req, v); err != nil {

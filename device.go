@@ -9,17 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type BaseResponse struct {
-	Errors []ServerError `json:"errors"`
-	Meta   MetaData      `json:"meta"`
-}
-
-type ServerError struct {
-	Code    int    `json:"code"`
-	ID      string `json:"id"`
-	Message string `json:"message"`
-}
-
 type DeviceResource struct {
 	AgentLoadFlags                string         `json:"agent_load_flags"`
 	AgentLocalTime                string         `json:"agent_local_time"`
@@ -73,19 +62,6 @@ type DevicePolicy struct {
 	GlobalConfig Policy `json:"global_config"`
 	Prevention   Policy `json:"prevention"`
 	SensorUpdate Policy `json:"sensor_update"`
-}
-
-type Pagenation struct {
-	Limit  int `json:"limit"`
-	Offset int `json:"offset"`
-	Total  int `json:"total"`
-}
-
-type MetaData struct {
-	PoweredBy  string      `json:"powered_by"`
-	QueryTime  float64     `json:"query_time"`
-	TraceID    string      `json:"trace_id"`
-	Pagenation *Pagenation `json:"pagination"`
 }
 
 type DeviceMetaData struct {
