@@ -51,3 +51,29 @@ func TestClientOAuth2(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(output.Resources))
 }
+
+func TestBasicRequest(t *testing.T) {
+	t.Run("Get Device List", func(t *testing.T) {
+		req := gofalcon.Request{
+			Method: "GET",
+			Path:   "/devices/queries/devices/v1",
+		}
+
+		var resp gofalcon.Response
+		require.NoError(t, commonClient.SendRequest(req, &resp))
+		assert.Equal(t, 0, len(resp.Errors))
+		assert.Greater(t, len(resp.Resources), 0)
+	})
+
+	t.Run("Accept if missing prefix slash", func(t *testing.T) {
+		req := gofalcon.Request{
+			Method: "GET",
+			Path:   "devices/queries/devices/v1",
+		}
+
+		var resp gofalcon.Response
+		require.NoError(t, commonClient.SendRequest(req, &resp))
+		assert.Equal(t, 0, len(resp.Errors))
+		assert.Greater(t, len(resp.Resources), 0)
+	})
+}

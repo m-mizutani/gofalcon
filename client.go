@@ -127,8 +127,8 @@ type ServerError struct {
 }
 
 // SendRequest sends any request to API endpoint and set results to v. This function retry the request if OAuth2 token is expired.
-func (x *Client) SendRequest(req Request, v interface{}) error {
-	if err := x.sendHTTPRequest(req, v); err != nil {
+func (x *Client) SendRequest(req Request, resp interface{}) error {
+	if err := x.sendHTTPRequest(req, resp); err != nil {
 		if _, ok := err.(*authError); !ok {
 			return err // General error
 		}
@@ -138,7 +138,7 @@ func (x *Client) SendRequest(req Request, v interface{}) error {
 		}
 
 		// Retry
-		return x.sendHTTPRequest(req, v)
+		return x.sendHTTPRequest(req, resp)
 	}
 
 	return nil
@@ -152,14 +152,23 @@ func (x *authError) Error() string {
 	return x.err.Error()
 }
 
-func (x *Client) sendHTTPRequest(req Request, v interface{}) error {
+func (x *Client) sendHTTPRequest(req Request, resp interface{}) error {
 	client := &http.Client{}
-	url := fmt.Sprintf("%s/%s", x.Endpoint, req.Path)
+	endpoint := x.Endpoint
+	if strings.HasSuffix(endpoint, "/") {
+		endpoint = endpoint[:len(endpoint)-1]
+	}
+	path := req.Path
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
+	url := endpoint + path
 	if len(req.QueryString) > 0 {
 		url = url + "?" + req.QueryString.Encode()
 	}
 
-	r, err := http.NewRequest(req.Method, url, req.Body)
+	httpReq, err := http.NewRequest(req.Method, url, req.Body)
 	if err != nil {
 		return errors.Wrap(err, "fail to create a graylog http request")
 	}
@@ -167,37 +176,37 @@ func (x *Client) sendHTTPRequest(req Request, v interface{}) error {
 	switch {
 	case x.OAuth2Token != "" && x.OAuth2Type != "":
 		auth := x.OAuth2Type + " " + x.OAuth2Token
-		r.Header.Add("authorization", auth)
+		httpReq.Header.Add("authorization", auth)
 	case x.User != "" && x.Token != "":
-		r.SetBasicAuth(x.User, x.Token)
+		httpReq.SetBasicAuth(x.User, x.Token)
 	}
 
 	if req.Body != nil {
 		// Set default content type
-		r.Header.Add("content-type", "application/json")
+		httpReq.Header.Add("content-type", "application/json")
 	}
 
-	r.Header.Add("accept", "application/json")
+	httpReq.Header.Add("accept", "application/json")
 	for _, hdr := range req.Headers {
-		r.Header.Set(hdr.Name, hdr.Value)
+		httpReq.Header.Set(hdr.Name, hdr.Value)
 	}
 
-	resp, err := client.Do(r)
+	httpResp, err := client.Do(httpReq)
 	if err != nil {
 		return errors.Wrap(err, "fail to send request to server")
 	}
 
-	defer resp.Body.Close()
-	rawData, err := ioutil.ReadAll(resp.Body)
+	defer httpResp.Body.Close()
+	rawData, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
-		return errors.Wrap(err, "Fail to read response from server")
+		return errors.Wrap(err, "Fail to read httpResponse from server")
 	}
 
 	// Error handling
-	if resp.StatusCode == 403 {
+	if httpResp.StatusCode == 403 {
 		return &authError{err: fmt.Errorf("Authentication Error (HTTP 403): %s", string(rawData))}
-	} else if resp.StatusCode >= 400 {
-		return fmt.Errorf("Fail HTTP request %d: %s", resp.StatusCode, string(rawData))
+	} else if httpResp.StatusCode >= 400 {
+		return fmt.Errorf("Fail HTTP request %d: %s", httpResp.StatusCode, string(rawData))
 	}
 
 	var base BaseResponse
@@ -212,7 +221,7 @@ func (x *Client) sendHTTPRequest(req Request, v interface{}) error {
 		return fmt.Errorf("Fail to request: %s", strings.Join(messages, ", "))
 	}
 
-	if err := json.Unmarshal(rawData, v); err != nil {
+	if err := json.Unmarshal(rawData, resp); err != nil {
 		return errors.Wrapf(err, "Fail to parse reponse of Falcon: %v", string(rawData))
 	}
 
