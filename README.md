@@ -87,6 +87,8 @@ map[string]interface {}{
   "detection_id":  "ldt:xxxxxxxxxxxxxxxxxxxxxxxxxxxx:0000000000000000",
   "last_behavior": "2020-11-05T04:10:45Z",
   "status":        "new",
+
+(snip)
 ```
 
 See [swagger](https://assets.falcon.crowdstrike.com/support/api/swagger.html) page for more API details.
