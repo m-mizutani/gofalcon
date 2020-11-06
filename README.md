@@ -78,7 +78,7 @@ func main() {
 }
 ```
 
-The example code is in [examples directory](`./examples/list-detects`). Then, you can run it.
+The example code is in [examples directory](./examples/list-detects). Then, you can run it.
 
 ```bash
 $ env FALCON_CLIENT_ID=aaaaaaaa FALCON_SECRET=bbbbbbbb go run ./examples/list-detects
