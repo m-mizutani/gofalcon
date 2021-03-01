@@ -39,7 +39,7 @@ type Client struct {
 // NewClient is constructor of Client
 func NewClient() *Client {
 	client := Client{
-		Endpoint: "https://api.crowdstrike.com",
+		Endpoint: "https://api.us-2.crowdstrike.com",
 	}
 	client.Device = &DeviceAPI{client: &client}
 	client.OAuth2 = &OAuth2API{client: &client}
