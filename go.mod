@@ -10,9 +10,7 @@ require (
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.9 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/sirupsen/logrus v1.4.2
-	github.com/stretchr/testify v1.4.0
-	golang.org/x/sys v0.0.0-20190927073244-c990c680b611 // indirect
+	github.com/sirupsen/logrus v1.8.3
+	github.com/stretchr/testify v1.7.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	gopkg.in/yaml.v2 v2.2.3 // indirect
 )
